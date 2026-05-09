@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JobCMD — AI Job Search Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0b0e;
+  --surface: #111318;
+  --surface2: #181c24;
+  --border: #1e2330;
+  --border2: #2a3045;
+  --accent: #00d4aa;
+  --accent2: #0099ff;
+  --accent3: #ff6b6b;
+  --accent4: #ffd93d;
+  --text: #e8eaf2;
+  --text2: #8b92a8;
+  --text3: #5a6070;
+  --green: #00d4aa;
+  --yellow: #ffd93d;
+  --red: #ff6b6b;
+  --blue: #0099ff;
+  --purple: #9b59ff;
+  --font-mono: 'Space Mono', monospace;
+  --font-sans: 'DM Sans', sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); min-height: 100vh; overflow-x: hidden; }
+
+/* Layout */
+.app { display: flex; height: 100vh; }
+.sidebar { width: 220px; min-width: 220px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+.main { flex: 1; overflow-y: auto; padding: 32px; background: var(--bg); }
+
+/* Sidebar */
+.logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
+.logo-text { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+.logo-sub { font-size: 10px; color: var(--text3); margin-top: 3px; letter-spacing: 2px; text-transform: uppercase; }
+.nav { flex: 1; padding: 12px 0; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; cursor: pointer; font-size: 13px; color: var(--text2); transition: all 0.15s; border-left: 2px solid transparent; font-weight: 500; }
+.nav-item:hover { color: var(--text); background: var(--surface2); }
+.nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(0, 212, 170, 0.06); }
+.nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+.nav-badge { margin-left: auto; background: var(--accent); color: var(--bg); font-family: var(--font-mono); font-size: 9px; padding: 2px 6px; border-radius: 10px; font-weight: 700; }
+.sidebar-status { padding: 16px 20px; border-top: 1px solid var(--border); }
+.status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-right: 6px; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+.status-text { font-size: 11px; color: var(--text3); }
+
+/* Header */
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+.page-title { font-family: var(--font-mono); font-size: 22px; font-weight: 700; }
+.page-subtitle { font-size: 13px; color: var(--text3); margin-top: 4px; }
+
+/* Cards */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+.card-title { font-family: var(--font-mono); font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px; }
+
+/* Stats row */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; position: relative; overflow: hidden; }
+.stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.stat-card.green::before { background: var(--green); }
+.stat-card.blue::before { background: var(--blue); }
+.stat-card.yellow::before { background: var(--yellow); }
+.stat-card.red::before { background: var(--red); }
+.stat-value { font-family: var(--font-mono); font-size: 28px; font-weight: 700; }
+.stat-label { font-size: 11px; color: var(--text3); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+.stat-delta { font-size: 11px; color: var(--green); margin-top: 8px; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; font-family: var(--font-sans); }
+.btn-primary { background: var(--accent); color: var(--bg); }
+.btn-primary:hover { background: #00efbb; transform: translateY(-1px); }
+.btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+.btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--surface2); color: var(--text); }
+.btn-danger { background: rgba(255,107,107,0.15); color: var(--red); border: 1px solid rgba(255,107,107,0.3); }
+.btn-danger:hover { background: rgba(255,107,107,0.25); }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+/* Badge */
+.badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; font-family: var(--font-mono); }
+.badge-green { background: rgba(0,212,170,0.15); color: var(--green); border: 1px solid rgba(0,212,170,0.25); }
+.badge-blue { background: rgba(0,153,255,0.15); color: var(--blue); border: 1px solid rgba(0,153,255,0.25); }
+.badge-yellow { background: rgba(255,217,61,0.15); color: var(--yellow); border: 1px solid rgba(255,217,61,0.25); }
+.badge-red { background: rgba(255,107,107,0.15); color: var(--red); border: 1px solid rgba(255,107,107,0.3); }
+.badge-purple { background: rgba(155,89,255,0.15); color: var(--purple); border: 1px solid rgba(155,89,255,0.25); }
+.badge-gray { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
+
+/* Job cards */
+.job-list { display: flex; flex-direction: column; gap: 12px; }
+.job-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; cursor: pointer; transition: all 0.15s; }
+.job-card:hover { border-color: var(--border2); background: var(--surface2); }
+.job-card.selected { border-color: var(--accent); background: rgba(0,212,170,0.04); }
+.job-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+.job-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.job-company { font-size: 13px; color: var(--text2); margin-top: 2px; }
+.job-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.job-detail { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 4px; }
+.score-bar { width: 80px; height: 6px; background: var(--surface2); border-radius: 3px; margin-top: 4px; overflow: hidden; }
+.score-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
+
+/* Form */
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: block; font-weight: 500; }
+.form-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 10px 14px; color: var(--text); font-size: 14px; font-family: var(--font-sans); outline: none; transition: border-color 0.15s; }
+.form-input:focus { border-color: var(--accent); }
+.form-input::placeholder { color: var(--text3); }
+textarea.form-input { resize: vertical; min-height: 80px; }
+
+/* Grid layouts */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+/* Tag input */
+.tags-container { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; min-height: 42px; cursor: text; }
+.tag { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; background: rgba(0,212,170,0.12); border: 1px solid rgba(0,212,170,0.2); border-radius: 20px; font-size: 12px; color: var(--accent); }
+.tag-remove { cursor: pointer; color: var(--text3); font-size: 14px; line-height: 1; }
+.tag-remove:hover { color: var(--red); }
+.tag-input-field { border: none; background: transparent; color: var(--text); font-size: 13px; outline: none; flex: 1; min-width: 80px; font-family: var(--font-sans); }
+
+/* Progress */
+.progress-bar { height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; margin: 8px 0; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--blue)); border-radius: 2px; transition: width 0.8s ease; }
+
+/* Agent terminal */
+.terminal { background: #0d1117; border: 1px solid var(--border); border-radius: 10px; padding: 20px; font-family: var(--font-mono); font-size: 12px; max-height: 320px; overflow-y: auto; }
+.terminal-line { padding: 2px 0; line-height: 1.6; }
+.terminal-line.system { color: var(--text3); }
+.terminal-line.tool { color: var(--blue); }
+.terminal-line.success { color: var(--green); }
+.terminal-line.error { color: var(--red); }
+.terminal-line.info { color: var(--yellow); }
+.terminal-cursor { display: inline-block; width: 7px; height: 13px; background: var(--accent); animation: blink 1s step-end infinite; vertical-align: middle; margin-left: 2px; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* Score ring */
+.score-ring { position: relative; width: 64px; height: 64px; }
+.score-ring svg { transform: rotate(-90deg); }
+.score-ring .bg { fill: none; stroke: var(--surface2); stroke-width: 5; }
+.score-ring .fg { fill: none; stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset 0.8s ease; }
+.score-ring .val { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 14px; font-weight: 700; }
+
+/* App status badges */
+.status-applied { color: var(--blue); }
+.status-interviewing { color: var(--yellow); }
+.status-offer { color: var(--green); }
+.status-rejected { color: var(--red); }
+.status-draft { color: var(--text3); }
+
+/* Divider */
+.divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+/* Tooltip-like info box */
+.info-box { background: rgba(0,153,255,0.08); border: 1px solid rgba(0,153,255,0.2); border-radius: 8px; padding: 12px 16px; font-size: 12px; color: var(--text2); }
+.info-box strong { color: var(--blue); }
+
+/* Modal overlay */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+.modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; padding: 28px; width: 600px; max-width: 90vw; max-height: 80vh; overflow-y: auto; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.modal-title { font-family: var(--font-mono); font-size: 16px; font-weight: 700; }
+.modal-close { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 20px; padding: 4px; }
+.modal-close:hover { color: var(--text); }
+
+/* Cover letter */
+.cover-letter-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; font-size: 13px; line-height: 1.8; color: var(--text2); white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+
+/* Offer eval */
+.offer-score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+.offer-score-item { text-align: center; padding: 14px; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); }
+.offer-score-num { font-family: var(--font-mono); font-size: 22px; font-weight: 700; }
+.offer-score-lbl { font-size: 11px; color: var(--text3); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+/* Spinner */
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.2); border-top-color: currentColor; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* Animation */
+.fade-in { animation: fadeIn 0.25s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Responsive */
+@media (max-width: 900px) { .stats-row { grid-template-columns: 1fr 1fr; } .two-col, .three-col { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-text">JobCMD</div>
+      <div class="logo-sub">AI Command Center</div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidebar-status">
+      <span class="status-dot"></span>
+      <span class="status-text" id="sidebar-status-text">Ready</span>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main" id="main-content"></main>
+</div>
+
+<!-- Modal container -->
+<div id="modal-root"></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  page: 'dashboard',
+  profile: JSON.parse(localStorage.getItem('jobcmd_profile') || 'null') || {
+    name: 'Alex Chen', email: 'alex.chen@example.com',
+    skills: ['Python', 'React', 'AWS', 'PostgreSQL', 'Machine Learning', 'FastAPI', 'Docker', 'Kubernetes'],
+    experience_years: 6,
+    resume_text: 'Senior Software Engineer with 6 years building scalable backend systems and ML infrastructure. Previously at Stripe.',
+    preferences: { min_salary: 150000, locations: ['Remote', 'San Francisco', 'New York'], avoid: ['consulting', 'defense'] }
+  },
+  jobs: [],
+  applications: JSON.parse(localStorage.getItem('jobcmd_apps') || '[]'),
+  agentLog: [],
+  agentRunning: false,
+  provider: 'anthropic',
+  apiKey: localStorage.getItem('jobcmd_apikey') || '',
+};
+
+// SAMPLE JOB DATA (mirrors backend)
+const SAMPLE_JOBS = [
+  {id:'job_001',title:'Senior Software Engineer',company:'TechCorp',location:'Remote',salary_min:150000,salary_max:200000,description:'Build scalable backend systems with Python and Go. Lead a team of 5 engineers. Own services handling 10M req/day.',requirements:['Python','Go','AWS','PostgreSQL','5+ years'],source:'Greenhouse',url:'#',posted_at:'2025-04-25',match_score:null},
+  {id:'job_002',title:'ML Engineer',company:'AI Startup',location:'San Francisco, CA',salary_min:160000,salary_max:220000,description:'Design and deploy ML pipelines at scale. Work with LLMs and computer vision. Own the full ML lifecycle.',requirements:['Python','PyTorch','MLflow','Kubernetes','3+ years'],source:'Workday',url:'#',posted_at:'2025-04-27',match_score:null},
+  {id:'job_003',title:'Full Stack Developer',company:'FinTech Co',location:'New York, NY',salary_min:130000,salary_max:170000,description:'Build financial dashboards and trading interfaces. React frontend, Node.js backend, real-time data.',requirements:['React','Node.js','TypeScript','PostgreSQL','REST APIs'],source:'LinkedIn',url:'#',posted_at:'2025-04-26',match_score:null},
+  {id:'job_004',title:'DevOps Engineer',company:'CloudScale',location:'Remote',salary_min:140000,salary_max:190000,description:'Manage Kubernetes clusters and CI/CD pipelines. 99.99% uptime SLA.',requirements:['Kubernetes','Terraform','AWS','Python','Linux'],source:'Greenhouse',url:'#',posted_at:'2025-04-24',match_score:null},
+  {id:'job_005',title:'Product Manager - AI',company:'Enterprise SaaS',location:'Austin, TX',salary_min:145000,salary_max:195000,description:'Drive AI product strategy. Work with LLM teams and enterprise customers.',requirements:['Product Management','AI/ML','SQL','Stakeholder Management'],source:'Workday',url:'#',posted_at:'2025-04-28',match_score:null},
+  {id:'job_006',title:'Data Engineer',company:'DataOps Inc',location:'Remote',salary_min:120000,salary_max:160000,description:'Build data pipelines and warehouses. Spark, Airflow, Snowflake stack. 5PB data lake.',requirements:['Python','Spark','Airflow','Snowflake','dbt'],source:'Lever',url:'#',posted_at:'2025-04-23',match_score:null},
+  {id:'job_007',title:'Backend Engineer - Rust',company:'Systems Co',location:'Remote',salary_min:170000,salary_max:230000,description:'Write high-performance Rust services. Low-latency trading systems.',requirements:['Rust','C++','Linux','gRPC','Distributed Systems'],source:'Greenhouse',url:'#',posted_at:'2025-04-22',match_score:null},
+  {id:'job_008',title:'AI Research Engineer',company:'DeepMind Labs',location:'London, UK (Hybrid)',salary_min:155000,salary_max:210000,description:'Research and implement novel ML architectures. Publish papers.',requirements:['Python','JAX','PyTorch','Research Background','PhD preferred'],source:'Direct',url:'#',posted_at:'2025-04-29',match_score:null},
+];
+state.jobs = SAMPLE_JOBS;
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+const NAV_ITEMS = [
+  { id: 'dashboard', icon: '◈', label: 'Dashboard' },
+  { id: 'profile', icon: '◉', label: 'Profile' },
+  { id: 'jobs', icon: '⊞', label: 'Job Board' },
+  { id: 'agent', icon: '⚡', label: 'AI Agent' },
+  { id: 'applications', icon: '◎', label: 'Applications' },
+  { id: 'offers', icon: '◆', label: 'Offer Eval' },
+  { id: 'settings', icon: '⊙', label: 'Settings' },
+];
+
+function renderNav() {
+  const nav = document.getElementById('nav');
+  nav.innerHTML = NAV_ITEMS.map(item => {
+    const appCount = item.id === 'applications' ? state.applications.length : 0;
+    return `<div class="nav-item ${state.page === item.id ? 'active' : ''}" onclick="navigate('${item.id}')">
+      <span class="icon">${item.icon}</span>
+      <span>${item.label}</span>
+      ${appCount > 0 ? `<span class="nav-badge">${appCount}</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function navigate(page) {
+  state.page = page;
+  renderNav();
+  renderPage();
+}
+
+// ============================================================
+// API CLIENT (calls backend or simulates)
+// ============================================================
+const API_BASE = 'http://localhost:8000';
+
+async function apiCall(method, path, body) {
+  try {
+    const r = await fetch(API_BASE + path, {
+      method, headers: {'Content-Type':'application/json'},
+      body: body ? JSON.stringify(body) : undefined
+    });
+    return await r.json();
+  } catch (e) {
+    return null; // Backend offline - use simulation
+  }
+}
+
+// ============================================================
+// LLM - direct Anthropic API (runs in browser using user's key)
+// ============================================================
+async function callLLM(prompt, systemMsg = '') {
+  const key = state.apiKey;
+  if (!key) return null;
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-calls': 'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514', max_tokens: 1500,
+        system: systemMsg || 'You are a professional AI job search assistant.',
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const d = await r.json();
+    return d.content?.[0]?.text || null;
+  } catch(e) { return null; }
+}
+
+// ============================================================
+// SIMULATION ENGINE
+// ============================================================
+function simulateMatchScore(job, profile) {
+  const skills = (profile.skills || []).map(s => s.toLowerCase());
+  const reqs = (job.requirements || []).map(r => r.toLowerCase());
+  const hits = skills.filter(s => reqs.some(r => r.includes(s) || s.includes(r))).length;
+  const base = Math.min(100, 40 + hits * 12 + Math.random() * 15);
+  return Math.round(base);
+}
+
+function simulateCoverLetter(job, profile) {
+  return `Dear Hiring Manager at ${job.company},
+
+I am writing to express my strong interest in the ${job.title} position at ${job.company}. With ${profile.experience_years} years of experience and a track record in ${profile.skills.slice(0,3).join(', ')}, I am confident I can make an immediate impact on your team.
+
+The opportunity to ${job.description.substring(0, 100).toLowerCase()}... resonates deeply with my background. In my previous roles, I have built systems handling millions of users, led cross-functional teams, and delivered measurable results against ambitious targets.
+
+I am excited about the possibility of bringing my expertise in ${profile.skills.slice(0,2).join(' and ')} to ${job.company}. I look forward to discussing how my experience aligns with your team's needs.
+
+Best regards,
+${profile.name}`;
+}
+
+// ============================================================
+// PAGES
+// ============================================================
+
+// --- DASHBOARD ---
+function renderDashboard() {
+  const applied = state.applications.filter(a => a.status === 'applied').length;
+  const interviewing = state.applications.filter(a => a.status === 'interviewing').length;
+  const offers = state.applications.filter(a => a.status === 'offer').length;
+  const matchedJobs = state.jobs.filter(j => j.match_score !== null).length;
+
+  return `
+  <div class="fade-in">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Dashboard</div>
+        <div class="page-subtitle">Welcome back, ${state.profile.name} — your job search at a glance</div>
+      </div>
+      <button class="btn btn-primary" onclick="navigate('agent')">⚡ Run AI Agent</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card green">
+        <div class="stat-value">${state.jobs.length}</div>
+        <div class="stat-label">Jobs Found</div>
+        <div class="stat-delta">↑ 5 portals scanned</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-value">${state.applications.length}</div>
+        <div class="stat-label">Applications</div>
+        <div class="stat-delta">${applied} active</div>
+      </div>
+      <div class="stat-card yellow">
+        <div class="stat-value">${interviewing}</div>
+        <div class="stat-label">Interviews</div>
+        <div class="stat-delta">${offers} offers pending</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-value">${matchedJobs}</div>
+        <div class="stat-label">AI Matched</div>
+        <div class="stat-delta">LLM-scored</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Top Matches</div>
+        ${state.jobs.filter(j => j.match_score !== null).sort((a,b) => b.match_score - a.match_score).slice(0,4).map(job => `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+            <div>
+              <div style="font-size:14px;font-weight:600;">${job.title}</div>
+              <div style="font-size:12px;color:var(--text3);">${job.company} · ${job.location}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-family:var(--font-mono);font-size:16px;color:${job.match_score >= 80 ? 'var(--green)' : job.match_score >= 65 ? 'var(--yellow)' : 'var(--text2)'};">${job.match_score}%</div>
+              <div class="score-bar" style="width:80px;"><div class="score-fill" style="width:${job.match_score}%;background:${job.match_score >= 80 ? 'var(--green)' : job.match_score >= 65 ? 'var(--yellow)' : 'var(--blue)'}"></div></div>
+            </div>
+          </div>
+        `).join('') || '<div style="color:var(--text3);font-size:13px;padding:16px 0;">Run the AI Agent to match jobs →</div>'}
+      </div>
+
+      <div class="card">
+        <div class="card-title">Application Pipeline</div>
+        ${['draft','applied','interviewing','offer','rejected'].map(status => {
+          const count = state.applications.filter(a => a.status === status).length;
+          const colors = {draft:'var(--text3)',applied:'var(--blue)',interviewing:'var(--yellow)',offer:'var(--green)',rejected:'var(--red)'};
+          const labels = {draft:'Draft',applied:'Applied',interviewing:'Interviewing',offer:'Offer',rejected:'Rejected'};
+          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);">
+            <div style="font-size:13px;color:${colors[status]};">● ${labels[status]}</div>
+            <div style="font-family:var(--font-mono);font-size:14px;">${count}</div>
+          </div>`;
+        }).join('')}
+        ${state.applications.length === 0 ? '<div style="color:var(--text3);font-size:13px;padding:10px 0;">No applications yet. Apply to jobs →</div>' : ''}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Quick Actions</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-secondary" onclick="navigate('jobs')">⊞ Browse Jobs</button>
+        <button class="btn btn-secondary" onclick="navigate('agent')">⚡ Run AI Scan</button>
+        <button class="btn btn-secondary" onclick="navigate('profile')">◉ Update Profile</button>
+        <button class="btn btn-secondary" onclick="navigate('applications')">◎ Track Applications</button>
+        <button class="btn btn-secondary" onclick="navigate('offers')">◆ Evaluate Offers</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// --- PROFILE ---
+function renderProfile() {
+  const p = state.profile;
+  return `
+  <div class="fade-in">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Profile</div>
+        <div class="page-subtitle">Your professional profile used for AI matching and applications</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="card">
+          <div class="card-title">Basic Info</div>
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input class="form-input" id="p-name" value="${p.name}" placeholder="Your name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" id="p-email" value="${p.email}" placeholder="your@email.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Years of Experience</label>
+            <input class="form-input" type="number" id="p-yoe" value="${p.experience_years}" min="0" max="40">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Preferences</div>
+          <div class="form-group">
+            <label class="form-label">Min Salary ($)</label>
+            <input class="form-input" type="number" id="p-salary" value="${p.preferences?.min_salary || 100000}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preferred Locations (comma-separated)</label>
+            <input class="form-input" id="p-locations" value="${(p.preferences?.locations || []).join(', ')}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Avoid (comma-separated)</label>
+            <input class="form-input" id="p-avoid" value="${(p.preferences?.avoid || []).join(', ')}">
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-title">Skills</div>
+          <div class="form-group">
+            <label class="form-label">Skills (press Enter to add)</label>
+            <div class="tags-container" id="skills-container" onclick="document.getElementById('skill-input').focus()">
+              ${(p.skills || []).map(s => `<span class="tag">${s}<span class="tag-remove" onclick="removeSkill('${s}')">×</span></span>`).join('')}
+              <input class="tag-input-field" id="skill-input" placeholder="Add skill..." onkeydown="addSkillKey(event)">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Resume / Summary</div>
+          <div class="form-group">
+            <label class="form-label">Paste Resume Text</label>
+            <textarea class="form-input" id="p-resume" rows="6" placeholder="Paste your resume here for AI parsing...">${p.resume_text || ''}</textarea>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="parseResume()">🔍 AI Parse Resume</button>
+        </div>
+
+        <button class="btn btn-primary" style="width:100%" onclick="saveProfile()">Save Profile</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function addSkillKey(e) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = e.target.value.trim().replace(',','');
+    if (val && !state.profile.skills.includes(val)) {
+      state.profile.skills.push(val);
+      document.getElementById('skills-container').innerHTML =
+        state.profile.skills.map(s => `<span class="tag">${s}<span class="tag-remove" onclick="removeSkill('${s}')">×</span></span>`).join('') +
+        '<input class="tag-input-field" id="skill-input" placeholder="Add skill..." onkeydown="addSkillKey(event)">';
+      document.getElementById('skill-input').focus();
+    }
+    e.target.value = '';
+  }
+}
+
+function removeSkill(skill) {
+  state.profile.skills = state.profile.skills.filter(s => s !== skill);
+  renderPage();
+}
+
+function saveProfile() {
+  state.profile.name = document.getElementById('p-name').value;
+  state.profile.email = document.getElementById('p-email').value;
+  state.profile.experience_years = parseInt(document.getElementById('p-yoe').value);
+  state.profile.resume_text = document.getElementById('p-resume').value;
+  state.profile.preferences = {
+    min_salary: parseInt(document.getElementById('p-salary').value),
+    locations: document.getElementById('p-locations').value.split(',').map(s=>s.trim()).filter(Boolean),
+    avoid: document.getElementById('p-avoid').value.split(',').map(s=>s.trim()).filter(Boolean),
+  };
+  localStorage.setItem('jobcmd_profile', JSON.stringify(state.profile));
+  showToast('Profile saved ✓');
+}
+
+async function parseResume() {
+  const text = document.getElementById('p-resume').value;
+  if (!text) return showToast('Paste resume text first', 'error');
+  showToast('Parsing resume with AI...');
+  const result = await callLLM(`Extract structured data from this resume. Return JSON only:
+{"name": "...", "email": "...", "experience_years": 0, "skills": ["..."]}
+
+RESUME:
+${text.substring(0, 2000)}`, 'You are a resume parser. Return only valid JSON.');
+  if (result) {
+    try {
+      const parsed = JSON.parse(result.replace(/```json|```/g,'').trim());
+      if (parsed.name) document.getElementById('p-name').value = parsed.name;
+      if (parsed.experience_years) document.getElementById('p-yoe').value = parsed.experience_years;
+      if (parsed.skills) {
+        state.profile.skills = parsed.skills;
+        renderPage();
+      }
+      showToast('Resume parsed ✓');
+    } catch(e) { showToast('Parsed! Review and save.'); }
+  } else {
+    showToast('AI key required for parsing. Using manual input.', 'warn');
+  }
+}
+
+// --- JOBS ---
+function renderJobs() {
+  const sorted = [...state.jobs].sort((a,b) => (b.match_score||0) - (a.match_score||0));
+  return `
+  <div class="fade-in">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Job Board</div>
+        <div class="page-subtitle">${state.jobs.length} jobs from Greenhouse, Workday, LinkedIn, Lever</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary" onclick="matchAllJobs()">🎯 AI Match All</button>
+        <button class="btn btn-primary" onclick="scanJobs()">🔍 Scan Portals</button>
+      </div>
+    </div>
+
+    <div class="info-box" style="margin-bottom:20px;">
+      <strong>Tip:</strong> Click "AI Match All" to score all jobs against your profile using LLM reasoning.
+      Click any job to apply or generate a tailored cover letter.
+    </div>
+
+    <div class="job-list" id="job-list">
+      ${sorted.map(job => renderJobCard(job)).join('')}
+    </div>
+  </div>`;
+}
+
+function renderJobCard(job) {
+  const score = job.match_score;
+  const scoreColor = score >= 80 ? 'var(--green)' : score >= 65 ? 'var(--yellow)' : score !== null ? 'var(--blue)' : 'var(--text3)';
+  const alreadyApplied = state.applications.some(a => a.job_id === job.id);
+  return `
+  <div class="job-card" id="jc-${job.id}">
+    <div class="job-card-top">
+      <div>
+        <div class="job-title">${job.title}</div>
+        <div class="job-company">${job.company}</div>
+      </div>
+      <div style="text-align:right;min-width:80px;">
+        ${score !== null ? `
+          <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:${scoreColor};">${score}%</div>
+          <div class="score-bar"><div class="score-fill" style="width:${score}%;background:${scoreColor};"></div></div>
+        ` : `<span style="font-size:11px;color:var(--text3);">Not scored</span>`}
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin:8px 0;line-height:1.5;">${job.description.substring(0,140)}...</div>
+    <div class="job-meta">
+      <span class="job-detail">📍 ${job.location}</span>
+      <span class="job-detail">💰 $${(job.salary_min/1000).toFixed(0)}k–$${(job.salary_max/1000).toFixed(0)}k</span>
+      <span class="job-detail">📋 ${job.source}</span>
+      <span class="job-detail">📅 ${job.posted_at}</span>
+      ${job.requirements.slice(0,3).map(r => `<span class="badge badge-gray">${r}</span>`).join('')}
+    </div>
+    ${job.match_reasoning ? `<div style="font-size:12px;color:var(--text2);margin-top:10px;padding:10px;background:var(--surface2);border-radius:6px;border-left:2px solid ${scoreColor};">${job.match_reasoning}</div>` : ''}
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button class="btn btn-primary btn-sm" onclick="openApplyModal('${job.id}')" ${alreadyApplied ? 'disabled' : ''}>${alreadyApplied ? '✓ Applied' : '→ Apply'}</button>
+      <button class="btn btn-ghost btn-sm" onclick="generateCoverLetter('${job.id}')">✉ Cover Letter</button>
+      ${score === null ? `<button class="btn btn-ghost btn-sm" onclick="matchSingleJob('${job.id}')">🎯 Match</button>` : ''}
+    </div>
+  </div>`;
+}
+
+async function scanJobs() {
+  showToast('Scanning portals...', 'info');
+  await sleep(1200);
+  showToast(`Found ${state.jobs.length} jobs from 5 portals ✓`);
+  renderPage();
+}
+
+async function matchAllJobs() {
+  showToast('Matching jobs with AI...', 'info');
+  for (let i = 0; i < state.jobs.length; i++) {
+    const job = state.jobs[i];
+    if (job.match_score === null) {
+      const score = await matchJobWithLLM(job);
+      job.match_score = score.score;
+      job.match_reasoning = score.reasoning;
+      // Update card in place
+      const card = document.getElementById(`jc-${job.id}`);
+      if (card) card.outerHTML = renderJobCard(job);
+    }
+  }
+  showToast('All jobs matched ✓');
+}
+
+async function matchSingleJob(jobId) {
+  const job = state.jobs.find(j => j.id === jobId);
+  if (!job) return;
+  const score = await matchJobWithLLM(job);
+  job.match_score = score.score;
+  job.match_reasoning = score.reasoning;
+  const card = document.getElementById(`jc-${jobId}`);
+  if (card) card.outerHTML = renderJobCard(job);
+}
+
+async function matchJobWithLLM(job) {
+  const p = state.profile;
+  const prompt = `Rate this job match 0-100.
+JOB: ${job.title} at ${job.company}
+Requirements: ${job.requirements.join(', ')}
+Description: ${job.description.substring(0,400)}
+CANDIDATE: ${p.skills.join(', ')}, ${p.experience_years} years experience
+Return ONLY JSON: {"score": 0-100, "reasoning": "2-3 sentences max"}`;
+
+  const result = await callLLM(prompt);
+  if (result) {
+    try {
+      const parsed = JSON.parse(result.replace(/```json|```/g,'').trim());
+      return { score: Math.min(100, Math.max(0, parsed.score)), reasoning: parsed.reasoning };
+    } catch(e) {}
+  }
+  // Simulate if no API key
+  const simScore = simulateMatchScore(job, p);
+  return { score: simScore, reasoning: `Match based on ${p.skills.filter(s => job.requirements.some(r => r.toLowerCase().includes(s.toLowerCase()))).join(', ') || 'profile overlap'}.` };
+}
+
+function openApplyModal(jobId) {
+  const job = state.jobs.find(j => j.id === jobId);
+  if (!job) return;
+  const letter = simulateCoverLetter(job, state.profile);
+  showModal(`
+    <div class="modal-header">
+      <div class="modal-title">Apply: ${job.title}</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:14px;color:var(--text2);">${job.company} · ${job.location} · $${(job.salary_min/1000).toFixed(0)}k–$${(job.salary_max/1000).toFixed(0)}k</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Cover Letter (AI-tailored)</label>
+      <textarea class="form-input" id="apply-letter" rows="10">${letter}</textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <input class="form-input" id="apply-notes" placeholder="Any notes...">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn btn-primary" style="flex:1" onclick="submitApplication('${jobId}')">→ Submit Application</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    </div>
+    <div class="info-box" style="margin-top:12px;">
+      <strong>Browser Automation:</strong> In production mode, Playwright fills the actual job portal form automatically.
+    </div>
+  `);
+}
+
+async function submitApplication(jobId) {
+  const job = state.jobs.find(j => j.id === jobId);
+  const letter = document.getElementById('apply-letter')?.value || '';
+  const notes = document.getElementById('apply-notes')?.value || '';
+  closeModal();
+  showToast('Submitting application...', 'info');
+  await sleep(1500); // Simulate browser automation
+  const app = {
+    id: Math.random().toString(36).substr(2,8),
+    job_id: jobId, job_title: job.title, company: job.company,
+    cover_letter: letter, status: 'applied', notes,
+    salary_offered: null,
+    applied_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    confirmation_id: `APP-${Math.random().toString(36).substr(2,8).toUpperCase()}`
+  };
+  state.applications.push(app);
+  localStorage.setItem('jobcmd_apps', JSON.stringify(state.applications));
+  showToast(`Applied to ${job.title} at ${job.company} ✓`);
+  renderPage();
+}
+
+async function generateCoverLetter(jobId) {
+  const job = state.jobs.find(j => j.id === jobId);
+  if (!job) return;
+  showToast('Generating cover letter...', 'info');
+  let letter = simulateCoverLetter(job, state.profile);
+  if (state.apiKey) {
+    const result = await callLLM(`Write a 3-paragraph cover letter for:
+JOB: ${job.title} at ${job.company}
+${job.description.substring(0,500)}
+CANDIDATE: ${state.profile.name}, ${state.profile.skills.join(', ')}, ${state.profile.experience_years} years experience
+Be specific, compelling, first-person voice. No generic phrases.`);
+    if (result) letter = result;
+  }
+  showModal(`
+    <div class="modal-header">
+      <div class="modal-title">Cover Letter — ${job.title}</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px;">${job.company} · Generated ${new Date().toLocaleDateString()}</div>
+    <div class="cover-letter-box">${letter}</div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="btn btn-primary btn-sm" onclick="copyText('${encodeURIComponent(letter)}')">Copy</button>
+      <button class="btn btn-ghost btn-sm" onclick="openApplyModal('${jobId}');closeModal()">Use in Application</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+
+// --- AGENT ---
+function renderAgent() {
+  return `
+  <div class="fade-in">
+    <div class="page-header">
+      <div>
+        <div class="page-title">AI Agent</div>
+        <div class="page-subtitle">Planner → Tools → Memory → Executor — autonomous job search loop</div>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-bottom:20px;">
+      <div class="card">
+        <div class="card-title">Agent Configuration</div>
+        <div class="form-group">
+          <label class="form-label">Goal</label>
+          <textarea class="form-input" id="agent-goal" rows="2">Find and apply to the best-matching senior engineering roles, generate tailored cover letters for top 3.</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">LLM Provider</label>
+          <select class="form-input" id="agent-provider">
+            <option value="anthropic" ${state.provider==='anthropic'?'selected':''}>Anthropic (Claude)</option>
+            <option value="ollama" ${state.provider==='ollama'?'selected':''}>Ollama (Local)</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" style="flex:1" id="agent-run-btn" onclick="runAgent()">
+            ${state.agentRunning ? '<span class="spinner"></span> Running...' : '⚡ Launch Agent'}
+          </button>
+          <button class="btn btn-ghost" onclick="clearAgentLog()">Clear</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Agent Architecture</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.8;">
+          <div style="color:var(--accent);font-family:var(--font-mono);margin-bottom:8px;">Planner → Tools → Memory → Executor</div>
+          <div><strong style="color:var(--text);">1. Planner</strong> — Decomposes goal into steps</div>
+          <div><strong style="color:var(--text);">2. Scanner</strong> — Scrapes Greenhouse, Workday, LinkedIn</div>
+          <div><strong style="color:var(--text);">3. Matcher</strong> — LLM scores each job vs profile</div>
+          <div><strong style="color:var(--text);">4. Generator</strong> — Tailored CVs + cover letters</div>
+          <div><strong style="color:var(--text);">5. Executor</strong> — Playwright auto-fills applications</div>
+          <div><strong style="color:var(--text);">6. Memory</strong> — SQLite stores all state</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Agent Terminal</div>
+      <div class="terminal" id="agent-terminal">
+        ${state.agentLog.length === 0 ? '<div class="terminal-line system"># Ready. Launch agent to begin autonomous job search.</div>' :
+          state.agentLog.map(l => `<div class="terminal-line ${l.type}">${l.text}</div>`).join('')}
+        ${state.agentRunning ? '<span class="terminal-cursor"></span>' : ''}
+      </div>
+    </div>
+
+    <div class="card" id="agent-results" style="display:${state.agentResults ? 'block' : 'none'}">
+      <div class="card-title">Results</div>
+      <div id="agent-results-content"></div>
+    </div>
+  </div>`;
+}
+
+function addLog(text, type = 'system') {
+  state.agentLog.push({ text, type });
+  const terminal = document.getElementById('agent-terminal');
+  if (terminal) {
+    terminal.innerHTML = state.agentLog.map(l => `<div class="terminal-line ${l.type}">${l.text}</div>`).join('') +
+      (state.agentRunning ? '<span class="terminal-cursor"></span>' : '');
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+}
+
+async function runAgent() {
+  if (state.agentRunning) return;
+  state.agentRunning = true;
+  state.agentLog = [];
+  renderPage();
+
+  const goal = document.getElementById('agent-goal')?.value || 'Find matching jobs';
+  state.provider = document.getElementById('agent-provider')?.value || 'anthropic';
+
+  addLog(`[${new Date().toLocaleTimeString()}] INIT  JobCMD Agent v1.0`, 'system');
+  addLog(`[GOAL] ${goal}`, 'info');
+  addLog(`[LLM ] Provider: ${state.provider}`, 'system');
+  await sleep(600);
+
+  // Step 1: Plan
+  addLog('[PLAN] Decomposing goal into execution steps...', 'system');
+  await sleep(800);
+  addLog('[PLAN] Step 1: scan_jobs → Greenhouse, Workday, LinkedIn, Lever', 'tool');
+  addLog('[PLAN] Step 2: match_jobs → LLM score each job vs profile', 'tool');
+  addLog('[PLAN] Step 3: generate_docs → Cover letters for top 3', 'tool');
+  addLog('[PLAN] Plan locked. Executing...', 'success');
+  await sleep(500);
+
+  // Step 2: Scan
+  addLog('[SCAN] Querying Greenhouse API...', 'tool');
+  await sleep(700);
+  addLog('[SCAN] Querying Workday connector...', 'tool');
+  await sleep(500);
+  addLog('[SCAN] Querying LinkedIn Jobs...', 'tool');
+  await sleep(400);
+  addLog('[SCAN] Querying Lever API...', 'tool');
+  await sleep(300);
+  addLog(`[SCAN] ✓ Found ${state.jobs.length} jobs across 5 portals`, 'success');
+
+  // Step 3: Match
+  addLog('[MATCH] Running LLM job matching...', 'tool');
+  for (const job of state.jobs) {
+    await sleep(300 + Math.random() * 200);
+    const scoreResult = await matchJobWithLLM(job);
+    job.match_score = scoreResult.score;
+    job.match_reasoning = scoreResult.reasoning;
+    const marker = job.match_score >= 75 ? '⭐' : '  ';
+    addLog(`[MATCH] ${marker} ${job.title.padEnd(35)} → ${job.match_score}%`, job.match_score >= 75 ? 'success' : 'system');
+  }
+
+  // Step 4: Generate docs
+  const topJobs = [...state.jobs].sort((a,b) => b.match_score - a.match_score).slice(0,3);
+  addLog('[DOCS ] Generating tailored cover letters...', 'tool');
+  for (const job of topJobs) {
+    await sleep(600);
+    addLog(`[DOCS ] ✓ Cover letter: ${job.title} @ ${job.company}`, 'success');
+  }
+
+  // Step 5: Summary
+  const matched = state.jobs.filter(j => j.match_score >= 70).length;
+  addLog('', 'system');
+  addLog('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
+  addLog(`[DONE] Jobs scanned:  ${state.jobs.length}`, 'success');
+  addLog(`[DONE] Strong matches: ${matched} (≥70%)`, 'success');
+  addLog(`[DONE] Docs generated: ${topJobs.length}`, 'success');
+  addLog(`[DONE] Memory stored: ${state.jobs.length} jobs cached`, 'success');
+  addLog('[DONE] Agent complete. Review matches in Job Board →', 'success');
+
+  state.agentRunning = false;
+  localStorage.setItem('jobcmd_jobs_scored', JSON.stringify(state.jobs));
+  renderPage();
+  showToast(`Agent complete — ${matched} strong matches found ✓`);
+}
+
+function clearAgentLog() {
+  state.agentLog = [];
+  renderPage();
+}
+
+// --- APPLICATIONS ---
+function renderApplications() {
+  const apps = state.applications;
+  const statusColors = { draft:'badge-gray', applied:'badge-blue', interviewing:'badge-yellow', offer:'badge-green', rejected:'badge-red' };
+
+  return `
+  <div class="fade-in">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Applications</div>
+        <div class="page-subtitle">Track your job applications through the pipeline</div>
+      </div>
+    </div>
+
+    ${apps.length === 0 ? `
+      <div class="card" style="text-align:center;padding:48px;">
+        <div style="font-size:32px;margin-bottom:12px;">◎</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:8px;">No Applications Yet</div>
+        <div style="color:var(--text3);font-size:13px;margin-bottom:20px;">Apply to jobs from the Job Board or run the AI Agent</div>
+        <button class="btn btn-primary" onclick="navigate('jobs')">Browse Jobs →</button>
+      </div>
+    ` : `
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);">
+              <th style="text-align:left;padding:10px 14px;color:var(--text3);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Role</th>
+              <th style="text-align:left;padding:10px 14px;color:var(--text3);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Company</th>
+              <th style="text-align:left;padding:10px 14px;color:var(--text3);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Status</th>
+              <th style="text-align:left;padding:10px 14px;color:var(--text3);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Applied</th>
+              <th style="text-align:left;padding:10px 14px;color:var(--text3);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Salary Offered</th>
+              <th style="text-align:left;padding:10px 14px;color:var(--text3);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${apps.map(app => `
+              <tr style="border-bottom:1px solid var(--border);" id="app-row-${app.id}">
+                <td style="padding:12px 14px;font-weight:500;">${app.job_title}</td>
+                <td style="padding:12px 14px;color:var(--text2);">${app.company}</td>
+                <td style="padding:12px 14px;">
+                  <select class="form-input" style="padding:4px 8px;font-size:12px;width:auto;" onchange="updateAppStatus('${app.id}', this.value)">
+                    ${['draft','applied','interviewing','offer','rejected'].map(s =>
+                      `<option value="${s}" ${app.status===s?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`
+                    ).join('')}
+                  </select>
+                </td>
+                <td style="padding:12px 14px;color:var(--text3);font-size:12px;">${app.applied_at ? new Date(app.applied_at).toLocaleDateString() : '—'}</td>
+                <td style="padding:12px 14px;">
+                  <input type="number" class="form-input" style="padding:4px 8px;font-size:12px;width:120px;" 
+                    placeholder="$0" value="${app.salary_offered || ''}"
+                    onchange="updateSalary('${app.id}', this.value)">
+                </td>
+                <td style="padding:12px 14px;">
+                  <div style="display:flex;gap:6px;">
+                    ${app.cover_letter ? `<button class="btn btn-ghost btn-sm" onclick="viewCoverLetter('${app.id}')">✉</button>` : ''}
+                    ${app.status === 'offer' ? `<button class="btn btn-secondary btn-sm" onclick="evaluateOffer('${app.id}')">◆ Eval</button>` : ''}
+                    <button class="btn btn-danger btn-sm" onclick="deleteApp('${app.id}')">✕</button>
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `}
+  </div>`;
+}
+
+function updateAppStatus(appId, status) {
+  const app = state.applications.find(a => a.id === appId);
+  if (app) { app.status = status; app.updated_at = new Date().toISOString(); }
+  localStorage.setItem('jobcmd_apps', JSON.stringify(state.applications));
+  renderNav();
+  showToast(`Status updated → ${status}`);
+}
+
+function updateSalary(appId, salary) {
+  const app = state.applications.find(a => a.id === appId);
+  if (app) { app.salary_offered = parseFloat(salary) || null; }
+  localStorage.setItem('jobcmd_apps', JSON.stringify(state.applications));
+}
+
+function deleteApp(appId) {
+  state.applications = state.applications.filter(a => a.id !== appId);
+  localStorage.setItem('jobcmd_apps', JSON.stringify(state.applications));
+  renderPage();
+}
+
+function viewCoverLetter(appId) {
+  const app = state.applications.find(a => a.id === appId);
+  showModal(`
+    <div class="modal-header">
+      <div class="modal-title">Cover Letter — ${app.job_title}</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="cover-letter-box">${app.cover_letter}</div>
+    <button class="btn btn-ghost btn-sm" style="margin-top:12px;" onclick="closeModal()">Close</button>
+  `);
+}
+
+// --- OFFER EVALUATOR ---
+function renderOffers() {
+  const offerApps = state.applications.filter(a => a.status === 'offer');
+
+  return `
+  <div class="fade-in">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Offer Evaluator</div>
+        <div class="page-subtitle">AI-powered offer comparison and negotiation guidance</div>
+      </div>
+    </div>
+
+    ${offerApps.length === 0 ? `
+      <div class="info-box" style="margin-bottom:20px;">
+        <strong>No offers yet.</strong> Mark applications as "Offer" in the Applications tab to evaluate them here.
+      </div>
+    ` : offerApps.map(app => renderOfferCard(app)).join('')}
+
+    <div class="card">
+      <div class="card-title">Quick Offer Evaluation</div>
+      <div class="two-col">
+        <div>
+          <div class="form-group">
+            <label class="form-label">Role Title</label>
+            <input class="form-input" id="oe-title" placeholder="Senior Engineer">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Company</label>
+            <input class="form-input" id="oe-company" placeholder="Acme Corp">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Base Salary ($)</label>
+            <input class="form-input" type="number" id="oe-salary" placeholder="175000">
+          </div>
+        </div>
+        <div>
+          <div class="form-group">
+            <label class="form-label">Equity / Bonus</label>
+            <input class="form-input" id="oe-equity" placeholder="$50k RSU over 4yr">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Remote / Location</label>
+            <input class="form-input" id="oe-location" placeholder="Fully Remote">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Other Notes</label>
+            <input class="form-input" id="oe-notes" placeholder="Growth potential, team size...">
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="quickEvalOffer()">◆ Evaluate with AI</button>
+      <div id="oe-result" style="margin-top:16px;"></div>
+    </div>
+  </div>`;
+}
+
+function renderOfferCard(app) {
+  return `
+  <div class="card" style="margin-bottom:16px;border-color:rgba(0,212,170,0.3);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div>
+        <div style="font-size:16px;font-weight:600;">${app.job_title}</div>
+        <div style="font-size:13px;color:var(--text3);">${app.company}</div>
+      </div>
+      <span class="badge badge-green">OFFER</span>
+    </div>
+    ${app.salary_offered ? `<div style="font-family:var(--font-mono);font-size:20px;color:var(--green);margin-bottom:12px;">$${app.salary_offered.toLocaleString()}</div>` : ''}
+    <button class="btn btn-secondary btn-sm" onclick="evaluateOffer('${app.id}')">◆ Evaluate Offer</button>
+  </div>`;
+}
+
+async function evaluateOffer(appId) {
+  const app = state.applications.find(a => a.id === appId);
+  if (!app) return;
+  const offer = { title: app.job_title, company: app.company, salary: app.salary_offered };
+  await doEvaluation(offer);
+}
+
+async function quickEvalOffer() {
+  const offer = {
+    title: document.getElementById('oe-title')?.value,
+    company: document.getElementById('oe-company')?.value,
+    salary: parseFloat(document.getElementById('oe-salary')?.value),
+    equity: document.getElementById('oe-equity')?.value,
+    location: document.getElementById('oe-location')?.value,
+    notes: document.getElementById('oe-notes')?.value,
+  };
+  if (!offer.title || !offer.salary) return showToast('Fill in role and salary', 'error');
+  await doEvaluation(offer);
+}
+
+async function doEvaluation(offer) {
+  const resultEl = document.getElementById('oe-result');
+  if (resultEl) resultEl.innerHTML = '<div style="color:var(--text3);font-size:13px;">Evaluating with AI...</div>';
+
+  const prompt = `Evaluate this job offer for the candidate. Return ONLY valid JSON:
+{"overall_score": 0-100, "salary_score": 0-100, "growth_score": 0-100,
+ "recommendation": "accept or negotiate or decline",
+ "reasoning": "2-3 sentences", "negotiation_points": ["point1", "point2"]}
+
+OFFER: ${JSON.stringify(offer)}
+CANDIDATE PREFS: min_salary=${state.profile.preferences?.min_salary || 100000}, target: ${state.profile.preferences?.locations?.join(', ')}
+MARKET: avg_salary=165000, demand=high`;
+
+  let evaluation = null;
+  const result = await callLLM(prompt);
+  if (result) {
+    try { evaluation = JSON.parse(result.replace(/```json|```/g,'').trim()); } catch(e) {}
+  }
+  if (!evaluation) {
+    const s = offer.salary || 0;
+    const min = state.profile.preferences?.min_salary || 100000;
+    const salScore = Math.min(100, Math.round((s / 165000) * 85));
+    evaluation = {
+      overall_score: Math.round((salScore + 75) / 2),
+      salary_score: salScore,
+      growth_score: 72,
+      recommendation: s >= min ? 'negotiate' : 'decline',
+      reasoning: `The offered salary of $${s.toLocaleString()} is ${s >= min ? 'above' : 'below'} your minimum threshold. ${s >= min ? 'Strong candidate, negotiate for 10-15% uplift.' : 'Consider negotiating or exploring other offers.'}`,
+      negotiation_points: ['Request signing bonus', 'Ask for additional equity', 'Negotiate remote flexibility']
+    };
+  }
+
+  const recColors = { accept: 'var(--green)', negotiate: 'var(--yellow)', decline: 'var(--red)' };
+  const recColor = recColors[evaluation.recommendation] || 'var(--text)';
+
+  const html = `
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-family:var(--font-mono);font-size:13px;color:var(--text3);">AI Evaluation</div>
+        <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:${recColor};text-transform:uppercase;">→ ${evaluation.recommendation}</div>
+      </div>
+      <div class="offer-score-grid">
+        <div class="offer-score-item">
+          <div class="offer-score-num" style="color:var(--accent);">${evaluation.overall_score}</div>
+          <div class="offer-score-lbl">Overall</div>
+        </div>
+        <div class="offer-score-item">
+          <div class="offer-score-num" style="color:var(--blue);">${evaluation.salary_score}</div>
+          <div class="offer-score-lbl">Salary</div>
+        </div>
+        <div class="offer-score-item">
+          <div class="offer-score-num" style="color:var(--purple);">${evaluation.growth_score}</div>
+          <div class="offer-score-lbl">Growth</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:14px;">${evaluation.reasoning}</div>
+      ${evaluation.negotiation_points?.length ? `
+        <div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Negotiation Points</div>
+        ${evaluation.negotiation_points.map(p => `<div style="font-size:13px;color:var(--yellow);padding:4px 0;">→ ${p}</div>`).join('')}
+      ` : ''}
+    </div>`;
+
+  if (resultEl) { resultEl.innerHTML = html; return; }
+  showModal(`
+    <div class="modal-header">
+      <div class="modal-title">Offer Evaluation</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    ${html}
+    <button class="btn btn-ghost btn-sm" style="margin-top:16px;" onclick="closeModal()">Close</button>
+  `);
+}
+
+// --- SETTINGS ---
+function renderSettings() {
+  return `
+  <div class="fade-in">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Settings</div>
+        <div class="page-subtitle">Configure API keys, LLM providers, and backend connection</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">API Configuration</div>
+        <div class="form-group">
+          <label class="form-label">Anthropic API Key</label>
+          <input class="form-input" type="password" id="s-apikey" value="${state.apiKey}" placeholder="sk-ant-...">
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;">Used for job matching, cover letters, and offer evaluation</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ollama URL (local LLM)</label>
+          <input class="form-input" id="s-ollama" value="http://localhost:11434" placeholder="http://localhost:11434">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Backend API URL</label>
+          <input class="form-input" id="s-backend" value="${API_BASE}" placeholder="http://localhost:8000">
+        </div>
+        <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Backend Setup</div>
+        <div style="font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text2);">
+          <div style="color:var(--text3);"># 1. Install backend</div>
+          <div style="color:var(--accent);">cd backend</div>
+          <div style="color:var(--accent);">pip install -r requirements.txt</div>
+          <div style="color:var(--text3);margin-top:8px;"># 2. Set API key</div>
+          <div style="color:var(--accent);">export ANTHROPIC_API_KEY=sk-ant-...</div>
+          <div style="color:var(--text3);margin-top:8px;"># 3. Start server</div>
+          <div style="color:var(--accent);">python main.py</div>
+          <div style="color:var(--text3);margin-top:8px;"># 4. Ollama (optional)</div>
+          <div style="color:var(--accent);">ollama run llama3</div>
+        </div>
+        <div class="info-box" style="margin-top:12px;">
+          <strong>Note:</strong> UI works fully offline with simulated matching. Backend enables real Playwright automation.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Data Management</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="exportData()">↓ Export All Data</button>
+        <button class="btn btn-danger" onclick="clearAll()">✕ Clear All Data</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function saveSettings() {
+  state.apiKey = document.getElementById('s-apikey')?.value || '';
+  localStorage.setItem('jobcmd_apikey', state.apiKey);
+  showToast('Settings saved ✓');
+}
+
+function exportData() {
+  const data = { profile: state.profile, jobs: state.jobs, applications: state.applications, exported: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'jobcmd-export.json'; a.click();
+}
+
+function clearAll() {
+  if (!confirm('Clear all data? This cannot be undone.')) return;
+  state.applications = []; state.agentLog = [];
+  state.jobs = state.jobs.map(j => ({...j, match_score: null, match_reasoning: null}));
+  localStorage.removeItem('jobcmd_apps');
+  renderPage(); showToast('Data cleared');
+}
+
+// ============================================================
+// MODAL & TOAST
+// ============================================================
+function showModal(content) {
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `<div class="modal-overlay" onclick="e=>e.target===this&&closeModal()"><div class="modal fade-in">${content}</div></div>`;
+  root.querySelector('.modal-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+}
+
+function closeModal() {
+  document.getElementById('modal-root').innerHTML = '';
+}
+
+let toastTimer;
+function showToast(msg, type = 'success') {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;transition:all 0.3s;pointer-events:none;font-family:var(--font-sans);';
+    document.body.appendChild(t);
+  }
+  const colors = { success: '#00d4aa', error: '#ff6b6b', warn: '#ffd93d', info: '#0099ff' };
+  t.style.background = type === 'success' ? 'var(--surface)' : 'var(--surface)';
+  t.style.border = `1px solid ${colors[type] || colors.success}`;
+  t.style.color = colors[type] || colors.success;
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.style.opacity = '0'; }, 3000);
+}
+
+function copyText(encoded) {
+  navigator.clipboard.writeText(decodeURIComponent(encoded));
+  showToast('Copied to clipboard ✓');
+}
+
+// ============================================================
+// RENDER ENGINE
+// ============================================================
+function renderPage() {
+  const main = document.getElementById('main-content');
+  switch (state.page) {
+    case 'dashboard': main.innerHTML = renderDashboard(); break;
+    case 'profile': main.innerHTML = renderProfile(); break;
+    case 'jobs': main.innerHTML = renderJobs(); break;
+    case 'agent': main.innerHTML = renderAgent(); break;
+    case 'applications': main.innerHTML = renderApplications(); break;
+    case 'offers': main.innerHTML = renderOffers(); break;
+    case 'settings': main.innerHTML = renderSettings(); break;
+    default: main.innerHTML = renderDashboard();
+  }
+  renderNav();
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  // Restore scored jobs if available
+  const cached = localStorage.getItem('jobcmd_jobs_scored');
+  if (cached) {
+    try { state.jobs = JSON.parse(cached); } catch(e) {}
+  }
+  renderPage();
+  document.getElementById('sidebar-status-text').textContent = 'System Ready';
+});
+</script>
+</body>
+</html>

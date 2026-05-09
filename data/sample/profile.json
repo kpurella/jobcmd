@@ -1,0 +1,14 @@
+{
+  "name": "Alex Chen",
+  "email": "alex.chen@example.com",
+  "skills": ["Python", "React", "AWS", "PostgreSQL", "Machine Learning", "FastAPI", "Docker", "Kubernetes"],
+  "experience_years": 6,
+  "resume_text": "Alex Chen - Senior Software Engineer with 6 years experience in Python, ML, and cloud infrastructure. Previously at Stripe building payment systems serving 50M users. Stanford CS graduate. Open source contributor to FastAPI and scikit-learn.",
+  "preferences": {
+    "min_salary": 150000,
+    "locations": ["Remote", "San Francisco", "New York"],
+    "job_types": ["Full-time"],
+    "industries": ["Tech", "AI/ML", "FinTech"],
+    "avoid": ["consulting", "defense", "gambling"]
+  }
+}
